@@ -36,15 +36,14 @@ export const getUserWorkspaces = async (req, res) => {
                                              user: true 
                                                 } 
                                         },
-                            // All members involved in this task
-                            members: {
-                                include: { 
-                                    user: true ,
-                                }
                             },
+                    },
+                    // All members involved in this task
+                    members: {
+                        include: { 
+                            user: true ,
                         }
                     },
-          
                 },
             },
         },
