@@ -1,5 +1,6 @@
 import { Inngest } from "inngest";
 import  prisma  from "../configs/prisma.js";
+import sendEmail from "../configs/nodemailer.js";
 
 // Create a client to send and receive events
 const inngest = new Inngest({ id: "Project-managment" });
@@ -128,5 +129,75 @@ const syncWorkspaceMemberCreation = inngest.createFunction({
         })
     }
 );
+//Inngest function to send email on task creation 
+const sendTaskAssignmentEmail = inngest.createFunction(
+    { id : "send-task-assignment-mail"},
+    { event : "app/task.assigned"},
+    async ({ event , step}) => {
+        const{ taskId, origin}= event.data;
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: { assignee : true , project : true }
+        });
+await sendEmail({
+  to: task.assignee.email,
+  subject: `New task assigned in ${task.project.name}`,
+  body: `
+    Hi ${task.assignee.name},
+
+    You’ve been assigned a new task in the project "${task.project.name}".
+
+    Task: ${task.title}
+    Due date: ${new Date(task.due_date).toLocaleDateString()}
+
+    You can view the task details and start working on it here:
+    <a href="${origin}">View task</a>
+
+    This task is also available in your dashboard.
+
+    —  
+    The Project Management App Team
+  `
+});
+if( new Date(task.due_date) !== new Date().toDateString()){
+    await step.sleepUntil( 'wait-for-due-date', new Date(task.due_date) );
+    await step.run('check-if-task-completed', async()=>{
+        const task = await prisma.task.findUnique({
+            where: { id: taskId},
+            include: {assignee: true , project : true}});
+            if(!task) return;
+            if(task.status !== 'DONE'){
+                //send reminder email
+         await step.run('send-task-reminder-email', async () => {
+  await sendEmail({
+    to: task.assignee.email,
+    subject: `Reminder: "${task.title}" is due today`,
+    body: `
+      Hi ${task.assignee.name},
+
+      This is a reminder that the following task is due today:
+
+      Task: ${task.title}
+      Project: ${task.project.name}
+
+      Please make sure to review and complete it as soon as possible.
+
+      You can view the task details here:
+      <a href="${origin}">View task</a>
+
+      —  
+      The Project Management App Team
+    `
+  });
+
+});
+
+            }
+        
+    })
+   
+    }
+});
+    
 export { inngest };
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation, syncWorkspaceCreation, syncWorkspaceUpdation, syncWorkspaceDeletion, syncWorkspaceMemberCreation];
+export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation, syncWorkspaceCreation, syncWorkspaceUpdation, syncWorkspaceDeletion, syncWorkspaceMemberCreation , sendTaskAssignmentEmail];
