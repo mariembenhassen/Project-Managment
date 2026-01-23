@@ -113,7 +113,7 @@ export const updateProject = async (req, res) => {
 };
 
 // Add Member to project 
-export const addMemberToProject =  async (req, res) => {
+export const addMember=  async (req, res) => {
     try{
     const{userId}= await req.auth();
     const{ projectId }= req.params;

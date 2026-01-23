@@ -15,7 +15,9 @@ app.use('/api/inngest', serve ({client: inngest , functions }));
 
 //Routes & adding the protect middleware
 app.use('/api/workspaces' , protect, workspaceRouter);
+app.use('/api/projects',protect,  projectRouter);
 
+// Test route
 app.get('/' , (req, res) => res.send('server is live ! '));
 
 const PORT = process.env.PORT || 5000;
