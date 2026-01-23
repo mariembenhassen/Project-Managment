@@ -1,6 +1,6 @@
 import express from 'express';
 import { createProject, updateProject , addMember} from '../controllers/projectController.js';
-const projectRouter = express.router();
+const projectRouter = express.Router();
 
 projectRouter.post('/', createProject);
 projectRouter.put('/', updateProject);
