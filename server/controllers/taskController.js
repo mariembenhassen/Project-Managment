@@ -1,4 +1,5 @@
 import prisma from "../configs/prisma.js";
+import { inngest } from "../inngest/index.js";
 
 //create task 
 export const createTask = async (req, res) => {
@@ -19,9 +20,10 @@ export const createTask = async (req, res) => {
        return res.status(403).json({ message: "Forbidden: You do not have permission to create task in this project"});
     }
     // check if assigneeId is a memeber in the project
-    else if(!assigneeId &&!project.members.find((member) => member.userId === assigneeId)){
-    return res.status(400).json({message : "assignee is not a member of the project"});  
-    }
+ if (assigneeId && !project.members.find(member => member.userId === assigneeId)) {
+    return res.status(400).json({ message: "Assignee is not a member of the project" });
+}
+
     const task = await prisma.task.create({
         data:{
             projectId,
@@ -41,7 +43,10 @@ export const createTask = async (req, res) => {
     });
     await inngest.send({ 
         name: "app/task.assigned",
-        data: { taskId: task.id, origin }
+        data: { 
+            taskId: task.id,
+             origin
+             }
     });
     return res.status(201).json({ message: "Task created successfully", task: taskWithAssignee} );
     }catch(error){
