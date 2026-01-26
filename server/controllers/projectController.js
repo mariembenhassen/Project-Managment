@@ -89,7 +89,7 @@ export const updateProject = async (req, res) => {
     }
     if(!workspace.members.some((member) => member.userId === userId && member.role === 'ADMIN')){
         const project = await prisma.project.findUnique({ 
-            where: { id}
+            where: {id}
         });
         if(!project){
             return res.status(404).json({ message: "Project not found" });
@@ -131,9 +131,9 @@ export const addMember=  async (req, res) => {
     if(!project){
         return res.status(404).json({ message: "Project not found" });
     }
-    const isAdmin = project.members.some((member) => member.user.id === userId && member.role === 'admin');
+    const isAdmin = project.members.some((member) => member.user.id === userId && member.role === 'ADMIN');
 
-    if(project.team_lead_id !== userId && !isAdmin){
+    if(project.team_lead !== userId && !isAdmin){
         return res.status(403).json({ message: "Forbidden: You do not have permission to add members to this project"});
     }
     // check if user exists
