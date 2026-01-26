@@ -39,6 +39,10 @@ export const createTask = async (req, res) => {
         where: { id: task.id },
         include: { assignee: true },
     });
+    await inngest.send({ 
+        name: "app/task.assigned",
+        data: { taskId: task.id, origin }
+    });
     return res.status(201).json({ message: "Task created successfully", task: taskWithAssignee} );
     }catch(error){
         console.error("Error creating task:", error);
