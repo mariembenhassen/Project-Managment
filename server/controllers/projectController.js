@@ -81,7 +81,7 @@ export const updateProject = async (req, res) => {
     //check if user has  admin role for  the workspace
         //check if user has  admin role for  the workspace 
     const workspace = await prisma.workspace.findUnique({ 
-        where: {userId: userId}, 
+        where: {id: workspaceId},
         include: {members : {include : {user:true}}}
     });
     if(!workspace){

@@ -24,7 +24,6 @@ const handleSubmit = async (e) => {
         setIsSubmitting(false);
         return;
     }
-    console.log("useOrganization result:", { isLoaded, organization });
     try {
         await organization.inviteMember({
             emailAddress: formData.email,
