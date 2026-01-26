@@ -3,22 +3,27 @@ import prisma from "../configs/prisma.js";
 export const createProject = async (req, res) => {
     try{
     const{userId}= await req.auth();
-    const{name, description , status, start_date, end_date , team_members , team_lead , progress , priority}= req.body;
+    const{ workspaceId, name, description , status, start_date, end_date , team_members , team_lead , progress , priority}= req.body;
 
     //check if user has  admin role for  the workspace 
     const workspace = await prisma.workspace.findUnique({ 
-        where: {userId: userId}, 
+        where: {id: workspaceId}, 
         include: {members : {include : {user:true}}}
     });
     if(!workspace){
         return res.status(404).json({ message: "Workspace not found" });
     }
-    if(!workspace.members.some((member) => member.userId === userId && member.role === 'admin')){
-        return res.status(403).json({ message: "Forbidden: You do not have admin privileges for this workspace"});
-    }
+const isAdmin = workspace.ownerId === userId || workspace.members.some(
+    (member) => member.userId === userId && member.role === 'ADMIN'
+);
+
+if (!isAdmin) {
+    return res.status(403).json({ message: "Forbidden: You do not have admin privileges for this workspace"});
+}
+
     //Get Team Lead id using email 
     const teamLead = await prisma.user.findUnique({
-        where : { email: team_lead.toLowerCase()},
+        where : { email: team_lead},
         select: { id: true }});
 
     const project = await prisma.project.create({
@@ -30,7 +35,7 @@ export const createProject = async (req, res) => {
             end_date: end_date ? new Date(end_date) : null,
             progress,
             priority,
-            team_lead_id: teamLead ? teamLead.id : null,
+             team_lead: teamLead ? teamLead.id : null,
             workspaceId: workspace.id,
         },
     });
@@ -82,7 +87,7 @@ export const updateProject = async (req, res) => {
     if(!workspace){
         return res.status(404).json({ message: "Workspace not found" });
     }
-    if(!workspace.members.some((member) => member.userId === userId && member.role === 'admin')){
+    if(!workspace.members.some((member) => member.userId === userId && member.role === 'ADMIN')){
         const project = await prisma.project.findUnique({ 
             where: { id}
         });
