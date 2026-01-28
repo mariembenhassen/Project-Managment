@@ -27,7 +27,7 @@ export const addComment = async (req, res)=>{
             data:{
                 taskId,
                 content,
-                authorId: userId
+                userId
             }
         });
         return res.status(201).json({ message: "Comment added successfully", comment });
